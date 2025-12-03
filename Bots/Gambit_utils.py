@@ -67,7 +67,42 @@ def generate_moves(board, color):
                     if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
                         possible_moves.append(((x, y), (x + 1, y + 1)))
                 elif piece[0] == 'r':
-                    pass
+                    # Move forward
+                    for i in range(x + 1, board.shape[0]):
+                        if board[i, y] == '':
+                            possible_moves.append(((x, y), (i, y)))
+                        elif board[i, y][1] != color:
+                            possible_moves.append(((x, y), (i, y)))
+                            break
+                        else:
+                            break
+                    # Move backward
+                    for i in range(x - 1, -1, -1):
+                        if board[i, y] == '':
+                            possible_moves.append(((x, y), (i, y)))
+                        elif board[i, y][1] != color:
+                            possible_moves.append(((x, y), (i, y)))
+                            break
+                        else:
+                            break
+                    # Move right
+                    for j in range(y + 1, board.shape[1]):
+                        if board[x, j] == '':
+                            possible_moves.append(((x, y), (x, j)))
+                        elif board[x, j][1] != color:
+                            possible_moves.append(((x, y), (x, j)))
+                            break
+                        else:
+                            break
+                    # Move left
+                    for j in range(y - 1, -1, -1):
+                        if board[x, j] == '':
+                            possible_moves.append(((x, y), (x, j)))
+                        elif board[x, j][1] != color:
+                            possible_moves.append(((x, y), (x, j)))
+                            break
+                        else:
+                            break
                 elif piece[0] == 'n':
                     pass
                 elif piece[0] == 'b':
