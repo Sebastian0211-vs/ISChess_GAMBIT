@@ -106,7 +106,54 @@ def generate_moves(board, color):
                 elif piece[0] == 'n':
                     pass
                 elif piece[0] == 'b':
-                    pass
+                    # Diagonal up-right
+                    i, j = x + 1, y + 1
+                    while i < board.shape[0] and j < board.shape[1]:
+                        if board[i, j] == '':
+                            possible_moves.append(((x, y), (i, j)))
+                        elif board[i, j][1] != color:
+                            possible_moves.append(((x, y), (i, j)))
+                            break
+                        else:
+                            break
+                        i += 1
+                        j += 1
+                    # Diagonal up-left
+                    i, j = x + 1, y - 1
+                    while i < board.shape[0] and j >= 0:
+                        if board[i, j] == '':
+                            possible_moves.append(((x, y), (i, j)))
+                        elif board[i, j][1] != color:
+                            possible_moves.append(((x, y), (i, j)))
+                            break
+                        else:
+                            break
+                        i += 1
+                        j -= 1
+                    # Diagonal down-right
+                    i, j = x - 1, y + 1
+                    while i >= 0 and j < board.shape[1]:
+                        if board[i, j] == '':
+                            possible_moves.append(((x, y), (i, j)))
+                        elif board[i, j][1] != color:
+                            possible_moves.append(((x, y), (i, j)))
+                            break
+                        else:
+                            break
+                        i -= 1
+                        j += 1
+                    # Diagonal down-left
+                    i, j = x - 1, y - 1
+                    while i >= 0 and j >= 0:
+                        if board[i, j] == '':
+                            possible_moves.append(((x, y), (i, j)))
+                        elif board[i, j][1] != color:
+                            possible_moves.append(((x, y), (i, j)))
+                            break
+                        else:
+                            break
+                        i -= 1
+                        j -= 1
                 elif piece[0] == 'q':
                     pass
                 elif piece[0] == 'k':
