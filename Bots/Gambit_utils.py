@@ -58,7 +58,14 @@ def generate_moves(board, color):
             piece = board[x, y]
             if piece != '' and piece[1] == color:
                 if piece[0] == 'p':
-                    pass
+                    # Move forward
+                    if board[x + 1, y] == '':
+                        possible_moves.append(((x, y), (x + 1, y)))
+                    # Capture diagonally
+                    if y - 1 >= 0 and board[x + 1, y - 1] != '' and board[x + 1, y - 1][1] != color:
+                        possible_moves.append(((x, y), (x + 1, y - 1)))
+                    if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
+                        possible_moves.append(((x, y), (x + 1, y + 1)))
                 elif piece[0] == 'r':
                     pass
                 elif piece[0] == 'n':
