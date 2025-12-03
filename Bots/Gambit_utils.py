@@ -104,7 +104,16 @@ def generate_moves(board, color):
                         else:
                             break
                 elif piece[0] == 'n':
-                    pass
+                    knight_moves = [
+                        (x + 2, y + 1), (x + 2, y - 1),
+                        (x - 2, y + 1), (x - 2, y - 1),
+                        (x + 1, y + 2), (x + 1, y - 2),
+                        (x - 1, y + 2), (x - 1, y - 2)
+                    ]
+                    for i, j in knight_moves:
+                        if 0 <= i < board.shape[0] and 0 <= j < board.shape[1]:
+                            if board[i, j] == '' or board[i, j][1] != color:
+                                possible_moves.append(((x, y), (i, j)))
                 elif piece[0] == 'b':
                     # Diagonal up-right
                     i, j = x + 1, y + 1
