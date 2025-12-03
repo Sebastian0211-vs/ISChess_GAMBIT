@@ -166,7 +166,16 @@ def generate_moves(board, color):
                 elif piece[0] == 'q':
                     pass
                 elif piece[0] == 'k':
-                    pass
+                    king_moves = [
+                        (x + 1, y), (x - 1, y),
+                        (x, y + 1), (x, y - 1),
+                        (x + 1, y + 1), (x + 1, y - 1),
+                        (x - 1, y + 1), (x - 1, y - 1)
+                    ]
+                    for i, j in king_moves:
+                        if 0 <= i < board.shape[0] and 0 <= j < board.shape[1]:
+                            if board[i, j] == '' or board[i, j][1] != color:
+                                possible_moves.append(((x, y), (i, j)))
 
     return possible_moves
 
