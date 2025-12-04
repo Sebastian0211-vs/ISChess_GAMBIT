@@ -67,42 +67,7 @@ def generate_moves(board, color):
                     if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
                         possible_moves.append(((x, y), (x + 1, y + 1)))
                 elif piece[0] == 'r':
-                    # Move forward
-                    for i in range(x + 1, board.shape[0]):
-                        if board[i, y] == '':
-                            possible_moves.append(((x, y), (i, y)))
-                        elif board[i, y][1] != color:
-                            possible_moves.append(((x, y), (i, y)))
-                            break
-                        else:
-                            break
-                    # Move backward
-                    for i in range(x - 1, -1, -1):
-                        if board[i, y] == '':
-                            possible_moves.append(((x, y), (i, y)))
-                        elif board[i, y][1] != color:
-                            possible_moves.append(((x, y), (i, y)))
-                            break
-                        else:
-                            break
-                    # Move right
-                    for j in range(y + 1, board.shape[1]):
-                        if board[x, j] == '':
-                            possible_moves.append(((x, y), (x, j)))
-                        elif board[x, j][1] != color:
-                            possible_moves.append(((x, y), (x, j)))
-                            break
-                        else:
-                            break
-                    # Move left
-                    for j in range(y - 1, -1, -1):
-                        if board[x, j] == '':
-                            possible_moves.append(((x, y), (x, j)))
-                        elif board[x, j][1] != color:
-                            possible_moves.append(((x, y), (x, j)))
-                            break
-                        else:
-                            break
+                    possible_moves.extend(rook_moves(board, x, y, color))
                 elif piece[0] == 'n':
                     knight_moves = [
                         (x + 2, y + 1), (x + 2, y - 1),
@@ -115,56 +80,12 @@ def generate_moves(board, color):
                             if board[i, j] == '' or board[i, j][1] != color:
                                 possible_moves.append(((x, y), (i, j)))
                 elif piece[0] == 'b':
-                    # Diagonal up-right
-                    i, j = x + 1, y + 1
-                    while i < board.shape[0] and j < board.shape[1]:
-                        if board[i, j] == '':
-                            possible_moves.append(((x, y), (i, j)))
-                        elif board[i, j][1] != color:
-                            possible_moves.append(((x, y), (i, j)))
-                            break
-                        else:
-                            break
-                        i += 1
-                        j += 1
-                    # Diagonal up-left
-                    i, j = x + 1, y - 1
-                    while i < board.shape[0] and j >= 0:
-                        if board[i, j] == '':
-                            possible_moves.append(((x, y), (i, j)))
-                        elif board[i, j][1] != color:
-                            possible_moves.append(((x, y), (i, j)))
-                            break
-                        else:
-                            break
-                        i += 1
-                        j -= 1
-                    # Diagonal down-right
-                    i, j = x - 1, y + 1
-                    while i >= 0 and j < board.shape[1]:
-                        if board[i, j] == '':
-                            possible_moves.append(((x, y), (i, j)))
-                        elif board[i, j][1] != color:
-                            possible_moves.append(((x, y), (i, j)))
-                            break
-                        else:
-                            break
-                        i -= 1
-                        j += 1
-                    # Diagonal down-left
-                    i, j = x - 1, y - 1
-                    while i >= 0 and j >= 0:
-                        if board[i, j] == '':
-                            possible_moves.append(((x, y), (i, j)))
-                        elif board[i, j][1] != color:
-                            possible_moves.append(((x, y), (i, j)))
-                            break
-                        else:
-                            break
-                        i -= 1
-                        j -= 1
+                    possible_moves.extend(bishop_moves(board, x, y, color))
                 elif piece[0] == 'q':
-                    pass
+                    # Move straight
+                    possible_moves.extend(rook_moves(board, x, y, color))
+                    # Move diagonally
+                    possible_moves.extend(bishop_moves(board, x, y, color))
                 elif piece[0] == 'k':
                     king_moves = [
                         (x + 1, y), (x - 1, y),
@@ -197,3 +118,99 @@ def is_king_missing(board, color):
             if board[x, y] == king:
                 return False
     return True
+
+
+def rook_moves(board, x, y, color):
+    possible_moves = []
+    # Move forward
+    for i in range(x + 1, board.shape[0]):
+        if board[i, y] == '':
+            possible_moves.append(((x, y), (i, y)))
+        elif board[i, y][1] != color:
+            possible_moves.append(((x, y), (i, y)))
+            break
+        else:
+            break
+    # Move backward
+    for i in range(x - 1, -1, -1):
+        if board[i, y] == '':
+            possible_moves.append(((x, y), (i, y)))
+        elif board[i, y][1] != color:
+            possible_moves.append(((x, y), (i, y)))
+            break
+        else:
+            break
+    # Move right
+    for j in range(y + 1, board.shape[1]):
+        if board[x, j] == '':
+            possible_moves.append(((x, y), (x, j)))
+        elif board[x, j][1] != color:
+            possible_moves.append(((x, y), (x, j)))
+            break
+        else:
+            break
+    # Move left
+    for j in range(y - 1, -1, -1):
+        if board[x, j] == '':
+            possible_moves.append(((x, y), (x, j)))
+        elif board[x, j][1] != color:
+            possible_moves.append(((x, y), (x, j)))
+            break
+        else:
+            break
+
+    return possible_moves
+
+
+def bishop_moves(board, x, y, color):
+    possible_moves = []
+    # Diagonal up-right
+    i, j = x + 1, y + 1
+    while i < board.shape[0] and j < board.shape[1]:
+        if board[i, j] == '':
+            possible_moves.append(((x, y), (i, j)))
+        elif board[i, j][1] != color:
+            possible_moves.append(((x, y), (i, j)))
+            break
+        else:
+            break
+        i += 1
+        j += 1
+    # Diagonal up-left
+    i, j = x + 1, y - 1
+    while i < board.shape[0] and j >= 0:
+        if board[i, j] == '':
+            possible_moves.append(((x, y), (i, j)))
+        elif board[i, j][1] != color:
+            possible_moves.append(((x, y), (i, j)))
+            break
+        else:
+            break
+        i += 1
+        j -= 1
+    # Diagonal down-right
+    i, j = x - 1, y + 1
+    while i >= 0 and j < board.shape[1]:
+        if board[i, j] == '':
+            possible_moves.append(((x, y), (i, j)))
+        elif board[i, j][1] != color:
+            possible_moves.append(((x, y), (i, j)))
+            break
+        else:
+            break
+        i -= 1
+        j += 1
+    # Diagonal down-left
+    i, j = x - 1, y - 1
+    while i >= 0 and j >= 0:
+        if board[i, j] == '':
+            possible_moves.append(((x, y), (i, j)))
+        elif board[i, j][1] != color:
+            possible_moves.append(((x, y), (i, j)))
+            break
+        else:
+            break
+        i -= 1
+        j -= 1
+
+    return possible_moves
