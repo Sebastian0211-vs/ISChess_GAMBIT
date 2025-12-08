@@ -1,6 +1,6 @@
 
 def alpha_beta(board, color, depth, alpha, beta, is_maximizing):
-    if depth == 0 or is_final(board):
+    if depth == 0 or is_terminal(board, color):
         return evaluate(board)
 
     possible_moves = generate_moves(board, color)
@@ -9,7 +9,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing):
         max_eval = float('-inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, color, depth-1, alpha, beta, False)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False)
             max_eval = max(max_eval, move_eval)
             alpha = max(alpha, move_eval)
             if beta <= alpha:
@@ -19,7 +19,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing):
         min_eval = float('inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, color, depth-1, alpha, beta, True)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True)
             min_eval = min(min_eval, move_eval)
             beta = min(beta, move_eval)
             if beta <= alpha:
@@ -27,16 +27,14 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing):
         return min_eval
 
 
-def is_final(board):
+def is_terminal(board, color):
     # TODO
     # One king is missing
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         return True
 
     # No more possible moves
-    if len(generate_moves(board, 'w')) == 0:
-        return True
-    if len(generate_moves(board, 'b')) == 0:
+    if len(generate_moves(board, color)) == 0:
         return True
 
     # Other final conditions
@@ -214,3 +212,7 @@ def bishop_moves(board, x, y, color):
         j -= 1
 
     return possible_moves
+
+
+def opposite(color):
+    return 'w' if color == 'b' else 'b'
