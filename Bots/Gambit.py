@@ -33,6 +33,11 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
 
     try:
         while search_depth <= max_search_depth:
+
+            if best_move in possible_moves:
+                # We prioritize the previously best move
+                possible_moves.sort(key=lambda m: m == best_move, reverse=True)
+
             current_best_move = None
             best_value = float('-inf')
 
