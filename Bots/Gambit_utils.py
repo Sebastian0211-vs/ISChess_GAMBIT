@@ -45,7 +45,7 @@ def is_terminal(board, color):
 
 def evaluate(board):
     # TODO
-    pass
+    return 0
 
 
 def generate_moves(board, color):
@@ -56,14 +56,15 @@ def generate_moves(board, color):
             piece = board[x, y]
             if piece != '' and piece[1] == color:
                 if piece[0] == 'p':
-                    # Move forward
-                    if board[x + 1, y] == '':
-                        possible_moves.append(((x, y), (x + 1, y)))
-                    # Capture diagonally
-                    if y - 1 >= 0 and board[x + 1, y - 1] != '' and board[x + 1, y - 1][1] != color:
-                        possible_moves.append(((x, y), (x + 1, y - 1)))
-                    if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
-                        possible_moves.append(((x, y), (x + 1, y + 1)))
+                    if x + 1 < board.shape[0]:
+                        # Move forward
+                        if board[x + 1, y] == '':
+                            possible_moves.append(((x, y), (x + 1, y)))
+                        # Capture diagonally
+                        if y - 1 >= 0 and board[x + 1, y - 1] != '' and board[x + 1, y - 1][1] != color:
+                            possible_moves.append(((x, y), (x + 1, y - 1)))
+                        if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
+                            possible_moves.append(((x, y), (x + 1, y + 1)))
                 elif piece[0] == 'r':
                     possible_moves.extend(rook_moves(board, x, y, color))
                 elif piece[0] == 'n':
