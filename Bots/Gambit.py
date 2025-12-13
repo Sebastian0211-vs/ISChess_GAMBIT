@@ -8,33 +8,50 @@
 #
 
 #   Be careful with modules to import from the root (don't forget the Bots.)
+import time
 from Bots.ChessBotList import register_chess_bot
-from Bots.Gambit_utils import alpha_beta, generate_moves, do_move
+from Bots.Gambit_utils import alpha_beta, generate_moves, do_move, opposite
 
 # Gambit chess bot implementation
 def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
+
+    start_time = time.time()
+    stop_time = start_time + time_budget - 0.1
 
     color = player_sequence[1]
 
     possible_moves = generate_moves(board, color)
 
     # No possible moves
-    if possible_moves is None or len(possible_moves) == 0:
+    if not possible_moves:
         return (0,0), (0,0)
 
-    best_move = None
-    best_value = float('-inf')
+    best_move = possible_moves[0]
 
-    search_depth = 5
+    search_depth = 1
+    max_search_depth = 20
 
-    for move in possible_moves:
-        new_board = do_move(board, move)
-        move_value = alpha_beta(new_board, color, search_depth-1, float('-inf'), float('inf'), False)
+    try:
+        while search_depth <= max_search_depth:
+            current_best_move = None
+            best_value = float('-inf')
 
-        if move_value > best_value:
-            best_value = move_value
-            best_move = move
+            for move in possible_moves:
+                if time.time() >= stop_time:
+                    raise TimeoutError("Search time exceeded")
 
+                new_board = do_move(board, move)
+                move_value = alpha_beta(new_board, opposite(color), search_depth-1, float('-inf'), float('inf'), False, stop_time)
+
+                if move_value > best_value:
+                    best_value = move_value
+                    current_best_move = move
+
+            best_move = current_best_move
+            search_depth += 1
+
+    except TimeoutError:
+        print("Search time exceeded, returning best move found so far.")
 
     return best_move
 
