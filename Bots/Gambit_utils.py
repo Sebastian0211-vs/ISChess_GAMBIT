@@ -24,7 +24,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
                 return entry['value']
 
     if depth == 0 or is_terminal(board, color):
-        return evaluate(board)
+        return evaluate(board, color)
 
     possible_moves = generate_moves(board, color)
 
@@ -84,7 +84,7 @@ def is_terminal(board, color):
     return False
 
 
-def evaluate(board):
+def evaluate(board, color):
     # TODO
     return 0
 
