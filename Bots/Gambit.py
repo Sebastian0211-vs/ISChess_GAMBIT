@@ -20,6 +20,8 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
 
     color = player_sequence[1]
 
+    transposition_table = {}
+
     possible_moves = generate_moves(board, color)
 
     # No possible moves
@@ -46,7 +48,7 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
                     raise TimeoutError("Search time exceeded")
 
                 new_board = do_move(board, move)
-                move_value = alpha_beta(new_board, opposite(color), search_depth-1, float('-inf'), float('inf'), False, stop_time)
+                move_value = alpha_beta(new_board, opposite(color), search_depth-1, float('-inf'), float('inf'), False, stop_time, transposition_table)
 
                 if move_value > best_value:
                     best_value = move_value

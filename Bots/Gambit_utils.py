@@ -1,35 +1,71 @@
 import time
 
-def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time):
+def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, transposition_table):
 
     if time.time() >= stop_time:
         raise TimeoutError("Search time exceeded")
+
+    board_hash = get_board_hash(board, color)
+    original_alpha = alpha
+
+    if board_hash in transposition_table:
+        entry = transposition_table[board_hash]
+        # If the stored depth is greater or equal, we can use the stored value
+        if entry['depth'] >= depth:
+            if entry['flag'] == 'EXACT':
+                return entry['value']
+            elif entry['flag'] == 'LOWERBOUND': # Alpha value
+                alpha = max(alpha, entry['value'])
+            elif entry['flag'] == 'UPPERBOUND': # Beta value
+                beta = min(beta, entry['value'])
+
+            # If alpha and beta cross (lowerbound > upperbound), we can return the stored value
+            if alpha >= beta:
+                return entry['value']
 
     if depth == 0 or is_terminal(board, color):
         return evaluate(board)
 
     possible_moves = generate_moves(board, color)
 
+    best_eval = float('-inf') if is_maximizing else float('inf')
+
     if is_maximizing:
-        max_eval = float('-inf')
+        #max_eval = float('-inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time)
-            max_eval = max(max_eval, move_eval)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time, transposition_table)
+            best_eval = max(best_eval, move_eval)
             alpha = max(alpha, move_eval)
             if beta <= alpha:
                 break
-        return max_eval
+        #return max_eval
     else:
-        min_eval = float('inf')
+        #min_eval = float('inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time)
-            min_eval = min(min_eval, move_eval)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time, transposition_table)
+            best_eval = min(best_eval, move_eval)
             beta = min(beta, move_eval)
             if beta <= alpha:
                 break
-        return min_eval
+        #return min_eval
+
+    # Determine the flag for the transposition table
+    entry_flag = 'EXACT'
+    if best_eval <= original_alpha:
+        entry_flag = 'UPPERBOUND' # We did not find a better move
+    elif best_eval >= beta:
+        entry_flag = 'LOWERBOUND' # We found a better move
+
+    # Store the result in the transposition table
+    transposition_table[board_hash] = {
+        'value': best_eval,
+        'depth': depth,
+        'flag': entry_flag
+    }
+
+    return best_eval
 
 
 def is_terminal(board, color):
@@ -222,3 +258,7 @@ def bishop_moves(board, x, y, color):
 
 def opposite(color):
     return 'w' if color == 'b' else 'b'
+
+
+def get_board_hash(board, color):
+    return hash((board.tobytes(), color))
