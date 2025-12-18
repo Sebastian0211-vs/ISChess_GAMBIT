@@ -45,8 +45,8 @@ def piece_type_color(cell: Any) -> Tuple[Optional[str], Optional[str]]:
 # -----------------------------------------------------------------------------
 
 # Slightly different MG/EG values help conversion.
-PIECE_VALUE_MG = {"p": 100, "n": 320, "b": 330, "r": 500, "q": 900, "k": 1e6}
-PIECE_VALUE_EG = {"p": 120, "n": 310, "b": 320, "r": 520, "q": 880, "k": 1e6}
+PIECE_VALUE_MG = {"p": 100, "n": 320, "b": 330, "r": 500, "q": 900, "k": 1e9}
+PIECE_VALUE_EG = {"p": 120, "n": 310, "b": 320, "r": 520, "q": 880, "k": 1e9}
 
 BISHOP_PAIR_BONUS_MG = 30
 BISHOP_PAIR_BONUS_EG = 50
