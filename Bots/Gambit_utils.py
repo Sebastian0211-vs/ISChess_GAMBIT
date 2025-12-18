@@ -26,8 +26,11 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
             if alpha >= beta:
                 return entry['value']
 
-    if depth == 0 or is_terminal(board, color):
+    if is_terminal(board, color):
         return evaluate(board, color)
+
+    if depth == 0:
+        return quiescence(board, color, alpha, beta, stop_time, transposition_table)
 
     possible_moves = generate_moves(board, color)
 
@@ -72,7 +75,6 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
 
 
 def is_terminal(board, color):
-    # TODO
     # One king is missing
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         return True
@@ -86,8 +88,79 @@ def is_terminal(board, color):
     # Default
     return False
 
+def generate_captures(board, color):
+    """Return capture moves only: moves where destination contains enemy piece."""
+    caps = []
+    for move in generate_moves(board, color):
+        (_, _), (dx, dy) = move
+        dst = board[dx, dy]
+        if dst != '' and dst[1] != color:
+            caps.append(move)
+    return caps
 
+def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_depth=16):
+    """
+    Quiescence search (captures-only) to reduce horizon effect.
+    Semantics match your current code style: evaluate(board, color) is 'good for color'.
+    """
+    if time.time() >= stop_time:
+        raise TimeoutError("Search time exceeded")
 
+    # Stand-pat: evaluate current (possibly quiet) position
+    stand_pat = evaluate(board, color)
+
+    # Fail-hard beta cutoff
+    if stand_pat >= beta:
+        return beta
+
+    # Improve alpha if possible
+    if stand_pat > alpha:
+        alpha = stand_pat
+
+    # Optional safety: avoid infinite capture chains / loops
+    if q_depth <= 0:
+        return alpha
+
+    # Search only captures
+    captures = generate_captures(board, color)
+
+    # Very cheap move ordering for q-search: consider "bigger victims" first
+    # (destination piece value proxy). Works with your string encoding.
+    piece_value = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
+
+    def capture_order(m):
+        (_, _), (dx, dy) = m
+        victim = board[dx, dy]
+        return piece_value.get(victim[0], 0) if victim != '' else 0
+
+    captures.sort(key=capture_order, reverse=True)
+
+    for move in captures:
+        if time.time() >= stop_time:
+            raise TimeoutError("Search time exceeded")
+
+        new_board = do_move(board, move)
+
+        # After making a move for 'color', it becomes opponent's turn.
+        score_for_opponent = quiescence(
+            new_board,
+            opposite(color),
+            -beta,
+            -alpha,
+            stop_time,
+            transposition_table,
+            q_depth=q_depth - 1
+        )
+
+        # Convert opponent's evaluation into current player's perspective
+        score = -score_for_opponent
+
+        if score >= beta:
+            return beta
+        if score > alpha:
+            alpha = score
+
+    return alpha
 
 def generate_moves(board, color):
     # TODO
