@@ -52,7 +52,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
         #max_eval = float('-inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time, transposition_table)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time, transposition_table, killer_moves, ply+1)
             best_eval = max(best_eval, move_eval)
             alpha = max(alpha, move_eval)
             if beta <= alpha:
