@@ -34,6 +34,8 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
 
     possible_moves = generate_moves(board, color)
 
+    possible_moves.sort(key=lambda m: score_move(board, m), reverse=True)
+
     best_eval = float('-inf') if is_maximizing else float('inf')
 
     if is_maximizing:
@@ -75,6 +77,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
 
 
 def is_terminal(board, color):
+    # TODO
     # One king is missing
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         return True
@@ -163,7 +166,6 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
     return alpha
 
 def generate_moves(board, color):
-    # TODO
     possible_moves = []
     for x in range(board.shape[0]):
         for y in range(board.shape[1]):
@@ -335,3 +337,25 @@ def opposite(color):
 
 def get_board_hash(board, color):
     return hash((board.tobytes(), color))
+
+
+def score_move(board, move):
+    origin, dest = move
+    victim = board[dest]
+
+    # If it's a capture
+    if victim != '':
+        # Valeurs arbitraires pour le tri : P=1, N/B=3, R=5, Q=9, K=100
+        values = {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 100}
+
+        attacker = board[origin]
+
+        victim_val = values.get(victim[0], 0)
+        attacker_val = values.get(attacker[0], 0)
+
+        # Formula: (Value of the victim * 10) - Value of the attacker
+        return (victim_val * 10) - attacker_val
+
+    # Not a capture
+    return 0
+# ---------------------------------------------------------
