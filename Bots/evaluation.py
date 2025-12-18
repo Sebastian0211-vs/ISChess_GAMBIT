@@ -1,29 +1,3 @@
-"""evaluation.py
-
-Static evaluation for the ISChess bot.
-
-Design goals
-- Fast: called thousands of times inside alpha-beta.
-- Stable: avoid overly noisy heuristics.
-- Strong: tapered (middlegame/endgame) evaluation with pawn structure + passed pawns.
-
-Assumptions (your current project)
-- 2 players only: colors 'w' and 'b'.
-- `board` is a numpy 2D array (typically 8x8) but bots receive the *string board*.
-- Each cell is one of:
-    - '' / None / 'X' / 'XX' (empty / blocked)
-    - a string like 'pw', 'kb', ... (piece + color)
-    - OR (when used from GUI side) a Piece object with `.type` and `.color`
-
-Usage
-    from evaluation import evaluate
-    score = evaluate(board, my_color='w')
-
-Score convention
-- Positive => good for my_color
-- Negative => good for opponent
-"""
-
 from __future__ import annotations
 
 from typing import Any, Optional, Tuple
