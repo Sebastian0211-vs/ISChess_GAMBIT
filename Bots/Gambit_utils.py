@@ -3,7 +3,7 @@ import time
 from Bots.evaluation import evaluate
 
 
-def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, transposition_table):
+def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transposition_table, killer_moves, ply):
 
     if time.time() >= stop_time:
         raise TimeoutError("Search time exceeded")
@@ -39,7 +39,17 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
 
     possible_moves = generate_moves(board, color)
 
-    possible_moves.sort(key=lambda m: score_move(board, m), reverse=True)
+    def is_capture(board, move):
+        (_, _), (dx, dy) = move
+        return board[dx, dy] != ""
+
+    possible_moves.sort(
+        key=lambda m: (
+            m in killer_moves[ply],  # killers first
+            score_move(board, m)  # then your existing capture heuristic
+        ),
+        reverse=True
+    )
 
     best_eval = float('-inf') if is_maximizing else float('inf')
 
@@ -51,17 +61,24 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
             best_eval = max(best_eval, move_eval)
             alpha = max(alpha, move_eval)
             if beta <= alpha:
+                # Store killer ONLY if it's a quiet move (captures are already ordered by score_move)
+                if not is_capture(board, move):
+                    killer_moves[ply].add(move)
                 break
+
         #return max_eval
     else:
         #min_eval = float('inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time, transposition_table)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time, transposition_table, killer_moves, ply +1)
             best_eval = min(best_eval, move_eval)
             beta = min(beta, move_eval)
             if beta <= alpha:
+                if not is_capture(board, move):
+                    killer_moves[ply].add(move)
                 break
+
         #return min_eval
 
     # Determine the flag for the transposition table
@@ -79,6 +96,8 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
     }
 
     return best_eval
+
+
 
 
 def is_terminal(board, color):
@@ -222,13 +241,18 @@ def generate_moves(board, color):
 
 
 def do_move(board, move):
-    origin = move[0]
-    destination = move[1]
+    (ox, oy), (dx, dy) = move
     new_board = board.copy()
-    piece = new_board[origin]
-    new_board[origin] = ''
-    new_board[destination] = piece
+
+    piece = new_board[ox, oy]
+    new_board[ox, oy] = ''
+
+    if piece != '' and piece[0] == 'p' and dx == new_board.shape[0] - 1:
+        piece = 'q' + piece[1]
+
+    new_board[dx, dy] = piece
     return new_board
+
 
 
 def is_king_missing(board, color):
@@ -341,25 +365,38 @@ def opposite(color):
 
 
 def get_board_hash(board, color):
-    return hash((board.tobytes(), color))
+    return hash((color, tuple(board.ravel().tolist())))
 
 
-def score_move(board, move):
-    origin, dest = move
-    victim = board[dest]
 
-    # If it's a capture
-    if victim != '':
-        # Valeurs arbitraires pour le tri : P=1, N/B=3, R=5, Q=9, K=100
-        values = {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 100}
+PIECE_VALUE = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
 
-        attacker = board[origin]
+def score_move(board, move, tt_move=None, killer_moves=None):
+    (ox, oy), (dx, dy) = move
 
-        victim_val = values.get(victim[0], 0)
-        attacker_val = values.get(attacker[0], 0)
+    if tt_move is not None and move == tt_move:
+        return 10_000_000  # always search TT-best first
 
-        # Formula: (Value of the victim * 10) - Value of the attacker
-        return (victim_val * 10) - attacker_val
+    piece = board[ox, oy]
+    captured = board[dx, dy]
 
-    # Not a capture
-    return 0
+    attacker = piece[0] if piece else ''
+    victim = captured[0] if captured else ''
+
+    score = 0
+
+    # Killer moves (non-captures that caused a beta cutoff at same depth)
+    if killer_moves is not None and move in killer_moves:
+        score += 50_000
+
+    # Promotions (your rules: auto queen promotion when pawn reaches last rank)
+    if attacker == 'p' and dx == board.shape[0] - 1:
+        score += 80_000
+
+    # MVV-LVA capture ordering
+    if victim:
+        score += 100_000  # ensure captures > quiet moves
+        score += 10 * PIECE_VALUE[victim] - PIECE_VALUE[attacker]
+
+    return score
+
