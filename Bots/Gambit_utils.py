@@ -1,5 +1,8 @@
 import time
 
+from Bots.evaluation import evaluate
+
+
 def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, transposition_table):
 
     if time.time() >= stop_time:
@@ -84,9 +87,6 @@ def is_terminal(board, color):
     return False
 
 
-def evaluate(board, color):
-    # TODO
-    return 0
 
 
 def generate_moves(board, color):

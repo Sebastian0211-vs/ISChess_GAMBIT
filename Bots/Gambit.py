@@ -1,4 +1,4 @@
-
+import sys
 #
 #   Example function to be implemented for
 #       Single important function is next_best
@@ -58,7 +58,7 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
             search_depth += 1
 
     except TimeoutError:
-        print("Search time exceeded, returning best move found so far.")
+        print("Search time exceeded, returning best move found so far.", file=sys.stderr)
 
     return best_move
 

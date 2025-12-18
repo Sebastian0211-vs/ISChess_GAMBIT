@@ -1,0 +1,6 @@
+engine:
+  name: Gambit
+  protocol: uci
+  interpreter: python
+  executable: "C:/Users/sebas/PycharmProjects/ISChess_GAMBIT/ISChess_uci.py"
+  working_dir: "C:/Users/sebas/PycharmProjects/ISChess_GAMBIT"
