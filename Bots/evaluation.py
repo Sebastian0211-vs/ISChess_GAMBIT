@@ -45,8 +45,8 @@ def piece_type_color(cell: Any) -> Tuple[Optional[str], Optional[str]]:
 # -----------------------------------------------------------------------------
 
 # Slightly different MG/EG values help conversion.
-PIECE_VALUE_MG = {"p": 100, "n": 320, "b": 330, "r": 500, "q": 900, "k": int('inf')}
-PIECE_VALUE_EG = {"p": 120, "n": 310, "b": 320, "r": 520, "q": 880, "k": int('inf')}
+PIECE_VALUE_MG = {"p": 100, "n": 320, "b": 330, "r": 500, "q": 900, "k": 1e6}
+PIECE_VALUE_EG = {"p": 120, "n": 310, "b": 320, "r": 520, "q": 880, "k": 1e6}
 
 BISHOP_PAIR_BONUS_MG = 30
 BISHOP_PAIR_BONUS_EG = 50
@@ -416,5 +416,10 @@ def evaluate(board, my_color: str) -> int:
         mg += king_pawn_shield_midgame(board, my_color, my_king_pos[0], my_king_pos[1])
     if en_king_pos is not None:
         mg -= king_pawn_shield_midgame(board, enemy_color, en_king_pos[0], en_king_pos[1])
+
+    if my_king_pos is None:
+        return -float('inf') + 1  # Lost
+    if en_king_pos is None:
+        return float('inf') - 1  # Won
 
     return int(mg * mgw + eg * egw)

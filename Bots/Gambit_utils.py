@@ -358,4 +358,3 @@ def score_move(board, move):
 
     # Not a capture
     return 0
-# ---------------------------------------------------------
