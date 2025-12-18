@@ -27,10 +27,15 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time, trans
                 return entry['value']
 
     if is_terminal(board, color):
-        return evaluate(board, color)
+        value = evaluate(board, color)
+        if not is_maximizing:
+            return -value
+        return value
 
     if depth == 0:
-        return quiescence(board, color, alpha, beta, stop_time, transposition_table)
+        if is_maximizing:
+            return quiescence(board, color, alpha, beta, stop_time, transposition_table)
+        return -quiescence(board, color, alpha, beta, stop_time, transposition_table)
 
     possible_moves = generate_moves(board, color)
 
