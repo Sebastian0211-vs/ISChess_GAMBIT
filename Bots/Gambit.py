@@ -54,7 +54,8 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
                     best_value = move_value
                     current_best_move = move
 
-            best_move = current_best_move
+            if current_best_move is not None:
+                best_move = current_best_move
             search_depth += 1
 
     except TimeoutError:
