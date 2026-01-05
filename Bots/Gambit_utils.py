@@ -26,7 +26,13 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
             if alpha >= beta:
                 return entry['value']
 
-    if is_terminal(board, color):
+    # if is_terminal(board, color):
+    #     value = evaluate(board, color)
+    #     if not is_maximizing:
+    #         return -value
+    #     return value
+
+    if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         value = evaluate(board, color)
         if not is_maximizing:
             return -value
@@ -38,6 +44,12 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
         return -quiescence(board, color, alpha, beta, stop_time, transposition_table)
 
     possible_moves = generate_moves(board, color)
+
+    if not possible_moves or len(possible_moves) == 0:
+        value = evaluate(board, color)
+        if not is_maximizing:
+            return -value
+        return value
 
     def is_capture(board, move):
         (_, _), (dx, dy) = move
@@ -101,7 +113,6 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
 
 
 def is_terminal(board, color):
-    # TODO
     # One king is missing
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         return True
