@@ -376,7 +376,8 @@ def opposite(color):
 
 
 def get_board_hash(board, color):
-    return hash((color, tuple(board.ravel().tolist())))
+    #return hash((color, tuple(board.ravel().tolist())))
+    return hash((color, board.tobytes()))
 
 
 
