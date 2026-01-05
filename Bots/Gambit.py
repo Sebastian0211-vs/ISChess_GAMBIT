@@ -19,10 +19,11 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
     stop_time = start_time + time_budget - 0.1
 
     color = player_sequence[1]
+    root_color = color
 
     transposition_table = {}
 
-    possible_moves = generate_moves(board, color)
+    possible_moves = generate_moves(board, color, root_color)
 
     # No possible moves
     if not possible_moves:
@@ -60,7 +61,8 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
                     stop_time,
                     transposition_table,
                     killer_moves,
-                    ply=1
+                    ply=1,
+                    root_color=root_color
                 )
 
                 if move_value > best_value:

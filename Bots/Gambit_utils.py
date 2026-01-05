@@ -3,7 +3,7 @@ import time
 from Bots.Gambit_evaluation import evaluate
 
 
-def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transposition_table, killer_moves, ply):
+def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transposition_table, killer_moves, ply, root_color):
 
     if time.time() >= stop_time:
         raise TimeoutError("Search time exceeded")
@@ -26,7 +26,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
             if alpha >= beta:
                 return entry['value']
 
-    # if is_terminal(board, color):
+    # if is_terminal(board, color, root_color):
     #     value = evaluate(board, color)
     #     if not is_maximizing:
     #         return -value
@@ -40,10 +40,10 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
 
     if depth == 0:
         if is_maximizing:
-            return quiescence(board, color, alpha, beta, stop_time, transposition_table)
-        return -quiescence(board, color, alpha, beta, stop_time, transposition_table)
+            return quiescence(board, color, alpha, beta, stop_time, transposition_table, root_color=root_color)
+        return -quiescence(board, color, alpha, beta, stop_time, transposition_table, root_color=root_color)
 
-    possible_moves = generate_moves(board, color)
+    possible_moves = generate_moves(board, color, root_color)
 
     if not possible_moves or len(possible_moves) == 0:
         value = evaluate(board, color)
@@ -69,7 +69,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
         #max_eval = float('-inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time, transposition_table, killer_moves, ply+1)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, False, stop_time, transposition_table, killer_moves, ply+1, root_color)
             best_eval = max(best_eval, move_eval)
             alpha = max(alpha, move_eval)
             if beta <= alpha:
@@ -83,7 +83,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
         #min_eval = float('inf')
         for move in possible_moves:
             new_board = do_move(board, move)
-            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time, transposition_table, killer_moves, ply +1)
+            move_eval = alpha_beta(new_board, opposite(color), depth-1, alpha, beta, True, stop_time, transposition_table, killer_moves, ply +1, root_color)
             best_eval = min(best_eval, move_eval)
             beta = min(beta, move_eval)
             if beta <= alpha:
@@ -112,13 +112,13 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
 
 
 
-def is_terminal(board, color):
+def is_terminal(board, color, root_color):
     # One king is missing
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
         return True
 
     # No more possible moves
-    if len(generate_moves(board, color)) == 0:
+    if len(generate_moves(board, color, root_color)) == 0:
         return True
 
     # Other final conditions
@@ -126,17 +126,17 @@ def is_terminal(board, color):
     # Default
     return False
 
-def generate_captures(board, color):
+def generate_captures(board, color, root_color):
     """Return capture moves only: moves where destination contains enemy piece."""
     caps = []
-    for move in generate_moves(board, color):
+    for move in generate_moves(board, color, root_color):
         (_, _), (dx, dy) = move
         dst = board[dx, dy]
         if dst != '' and dst[1] != color:
             caps.append(move)
     return caps
 
-def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_depth=16):
+def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_depth=16, root_color=None):
     """
     Quiescence search (captures-only) to reduce horizon effect.
     Semantics match your current code style: evaluate(board, color) is 'good for color'.
@@ -160,7 +160,7 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
         return alpha
 
     # Search only captures
-    captures = generate_captures(board, color)
+    captures = generate_captures(board, color, root_color)
 
     # Very cheap move ordering for q-search: consider "bigger victims" first
     # (destination piece value proxy). Works with your string encoding.
@@ -187,7 +187,8 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
             -alpha,
             stop_time,
             transposition_table,
-            q_depth=q_depth - 1
+            q_depth=q_depth - 1,
+            root_color=root_color
         )
 
         # Convert opponent's evaluation into current player's perspective
@@ -200,22 +201,40 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
 
     return alpha
 
-def generate_moves(board, color):
+def generate_moves(board, color, root_color):
     possible_moves = []
+    direction  = 1 if color == root_color else -1
+
     for x in range(board.shape[0]):
         for y in range(board.shape[1]):
             piece = board[x, y]
             if piece != '' and piece[1] == color:
+                # if piece[0] == 'p':
+                #     if x + 1 < board.shape[0]:
+                #         # Move forward
+                #         if board[x + 1, y] == '':
+                #             possible_moves.append(((x, y), (x + 1, y)))
+                #         # Capture diagonally
+                #         if y - 1 >= 0 and board[x + 1, y - 1] != '' and board[x + 1, y - 1][1] != color:
+                #             possible_moves.append(((x, y), (x + 1, y - 1)))
+                #         if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
+                #             possible_moves.append(((x, y), (x + 1, y + 1)))
                 if piece[0] == 'p':
-                    if x + 1 < board.shape[0]:
+                    next_x = x + direction
+                    if 0 <= next_x < board.shape[0]:
                         # Move forward
-                        if board[x + 1, y] == '':
-                            possible_moves.append(((x, y), (x + 1, y)))
-                        # Capture diagonally
-                        if y - 1 >= 0 and board[x + 1, y - 1] != '' and board[x + 1, y - 1][1] != color:
-                            possible_moves.append(((x, y), (x + 1, y - 1)))
-                        if y + 1 < board.shape[1] and board[x + 1, y + 1] != '' and board[x + 1, y + 1][1] != color:
-                            possible_moves.append(((x, y), (x + 1, y + 1)))
+                        if board[next_x, y] == '':
+                            possible_moves.append(((x, y), (next_x, y)))
+                        # Capture diagonally left
+                        if y - 1 >= 0:
+                            target = board[next_x, y - 1]
+                            if target != '' and target[1] != color:
+                                possible_moves.append(((x, y), (next_x, y - 1)))
+                        # Capture diagonally right
+                        if y + 1 < board.shape[1]:
+                            target = board[next_x, y + 1]
+                            if target != '' and target[1] != color:
+                                possible_moves.append(((x, y), (next_x, y + 1)))
                 elif piece[0] == 'r':
                     possible_moves.extend(rook_moves(board, x, y, color))
                 elif piece[0] == 'n':
@@ -258,8 +277,12 @@ def do_move(board, move):
     piece = new_board[ox, oy]
     new_board[ox, oy] = ''
 
-    if piece != '' and piece[0] == 'p' and dx == new_board.shape[0] - 1:
-        piece = 'q' + piece[1]
+    # if piece != '' and piece[0] == 'p' and dx == new_board.shape[0] - 1:
+    #     piece = 'q' + piece[1]
+
+    if piece != '' and piece[0] == 'p':
+        if dx == 0 or dx == new_board.shape[0] - 1:
+            piece = 'q' + piece[1]
 
     new_board[dx, dy] = piece
     return new_board
@@ -402,7 +425,10 @@ def score_move(board, move, tt_move=None, killer_moves=None):
         score += 50_000
 
     # Promotions (your rules: auto queen promotion when pawn reaches last rank)
-    if attacker == 'p' and dx == board.shape[0] - 1:
+    # if attacker == 'p' and dx == board.shape[0] - 1:
+    #     score += 80_000
+
+    if attacker == 'p' and (dx == 0 or dx == board.shape[0] - 1):
         score += 80_000
 
     # MVV-LVA capture ordering
