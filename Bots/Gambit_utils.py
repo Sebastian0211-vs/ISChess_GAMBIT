@@ -1,6 +1,6 @@
 import time
 
-from Bots.evaluation import evaluate
+from Bots.Gambit_evaluation import evaluate
 
 
 def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transposition_table, killer_moves, ply):
