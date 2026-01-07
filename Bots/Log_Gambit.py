@@ -102,6 +102,12 @@ def Log_Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
             current_best_move = None
             best_value = float('-inf')
 
+            enemy_king = 'k' + opposite(color)
+            for move in possible_moves:
+                (_, _), (dx, dy) = move
+                if board[dx, dy] == enemy_king:
+                    return move
+
             for move in possible_moves:
                 if time.time() >= stop_time:
                     raise TimeoutError("Search time exceeded")

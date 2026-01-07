@@ -390,8 +390,10 @@ def evaluate(board, my_color: str) -> int:
                 else:
                     en_king_pos = (y, x)
 
-            mg += sign * (PIECE_VALUE_MG[pt] + PST_MG[pt][y][x])
-            eg += sign * (PIECE_VALUE_EG[pt] + PST_EG[pt][y][x])
+            idx_y = y if pc == my_color else (7 - y)
+
+            mg += sign * (PIECE_VALUE_MG[pt] + PST_MG[pt][idx_y][x])
+            eg += sign * (PIECE_VALUE_EG[pt] + PST_EG[pt][idx_y][x])
 
     # Bishop pair
     if my_bishops >= 2:
