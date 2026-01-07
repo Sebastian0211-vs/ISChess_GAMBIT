@@ -34,7 +34,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
     #     return value
 
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
-        return evaluate(board, color)
+        return evaluate(board, root_color)
 
 
     if depth == 0:
