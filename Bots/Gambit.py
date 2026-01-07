@@ -10,13 +10,13 @@ import sys
 #   Be careful with modules to import from the root (don't forget the Bots.)
 import time
 from Bots.ChessBotList import register_chess_bot
-from Bots.Gambit_utils import alpha_beta, generate_moves, do_move, opposite
+from Bots.Gambit_utils import alpha_beta, generate_moves, do_move, opposite, score_move
 
 # Gambit chess bot implementation
 def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
 
     start_time = time.time()
-    stop_time = start_time + time_budget - 0.1
+    stop_time = start_time + time_budget - min(0.1, time_budget*0.1)
 
     color = player_sequence[1]
     root_color = color
@@ -35,13 +35,19 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
     max_search_depth = 20
 
     killer_moves = [set() for _ in range(max_search_depth + 5)]
-
+    root_scores = {m: 0 for m in possible_moves}
     try:
         while search_depth <= max_search_depth:
 
             if best_move in possible_moves:
                 # We prioritize the previously best move
-                possible_moves.sort(key=lambda m: m == best_move, reverse=True)
+                possible_moves.sort(
+                    key=lambda m: (
+                        root_scores.get(m, float('-inf')),  # best from last completed depth first
+                        score_move(board, m)  # then tactical ordering
+                    ),
+                    reverse=True
+                )
 
             current_best_move = None
             best_value = float('-inf')
@@ -64,6 +70,7 @@ def Gambit_chess_bot(player_sequence, board, time_budget, **kwargs):
                     ply=1,
                     root_color=root_color
                 )
+                root_scores[move] = move_value
 
                 if move_value > best_value:
                     best_value = move_value

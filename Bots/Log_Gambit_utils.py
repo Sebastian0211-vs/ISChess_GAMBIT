@@ -12,6 +12,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
 
     board_hash = get_board_hash(board, color)
     original_alpha = alpha
+    original_beta = beta
 
     if config["USE_TT"] and board_hash in transposition_table:
         entry = transposition_table[board_hash]
@@ -37,29 +38,17 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
     #     return value
 
     if is_king_missing(board, 'w') or is_king_missing(board, 'b'):
-        value = evaluate(board, color)
-        if not is_maximizing:
-            return -value
-        return value
+        return evaluate(board, color)
 
     if depth == 0:
-        if config["USE_QUIESCENCE"]:
-            if is_maximizing:
-                return quiescence(board, color, alpha, beta, stop_time, transposition_table, root_color=root_color, info=info)
-            return -quiescence(board, color, alpha, beta, stop_time, transposition_table, root_color=root_color, info=info)
-        else:
-            value = evaluate(board, color)
-            if not is_maximizing:
-                return -value
-            return value
+        return quiescence(board, color, alpha, beta, stop_time, transposition_table, root_color=root_color, info=info)
 
     possible_moves = generate_moves(board, color, root_color)
 
     if not possible_moves or len(possible_moves) == 0:
-        value = evaluate(board, color)
-        if not is_maximizing:
-            return -value
-        return value
+        return evaluate(board, color)
+
+    is_maximizing = (color == root_color)
 
     def is_capture(board, move):
         (_, _), (dx, dy) = move
@@ -109,7 +98,7 @@ def alpha_beta(board, color, depth, alpha, beta, is_maximizing, stop_time,transp
         entry_flag = 'EXACT'
         if best_eval <= original_alpha:
             entry_flag = 'UPPERBOUND' # We did not find a better move
-        elif best_eval >= beta:
+        elif best_eval >= original_beta:
             entry_flag = 'LOWERBOUND' # We found a better move
 
         # Store the result in the transposition table
@@ -158,26 +147,29 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
     if time.time() >= stop_time:
         raise TimeoutError("Search time exceeded")
 
-    # Stand-pat: evaluate current (possibly quiet) position
-    stand_pat = evaluate(board, color)
+    # Score always from root_color perspective
+    stand_pat = evaluate(board, root_color)
 
-    # Fail-hard beta cutoff
-    if stand_pat >= beta:
-        return beta
+    # Decide whether this node is maximizing or minimizing
+    maximizing = (color == root_color)
 
-    # Improve alpha if possible
-    if stand_pat > alpha:
-        alpha = stand_pat
+    if maximizing:
+        if stand_pat >= beta:
+            return beta
+        if stand_pat > alpha:
+            alpha = stand_pat
+    else:
+        if stand_pat <= alpha:
+            return alpha
+        if stand_pat < beta:
+            beta = stand_pat
 
-    # Optional safety: avoid infinite capture chains / loops
     if q_depth <= 0:
-        return alpha
+        return alpha if maximizing else beta
 
-    # Search only captures
     captures = generate_captures(board, color, root_color)
 
-    # Very cheap move ordering for q-search: consider "bigger victims" first
-    # (destination piece value proxy). Works with your string encoding.
+    # Order captures by victim value (same as you did)
     piece_value = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
 
     def capture_order(m):
@@ -187,34 +179,32 @@ def quiescence(board, color, alpha, beta, stop_time, transposition_table, q_dept
 
     captures.sort(key=capture_order, reverse=True)
 
-    for move in captures:
-        if time.time() >= stop_time:
-            raise TimeoutError("Search time exceeded")
-
-        new_board = do_move(board, move)
-
-        # After making a move for 'color', it becomes opponent's turn.
-        score_for_opponent = quiescence(
-            new_board,
-            opposite(color),
-            -beta,
-            -alpha,
-            stop_time,
-            transposition_table,
-            q_depth=q_depth - 1,
-            root_color=root_color,
-            info=info
-        )
-
-        # Convert opponent's evaluation into current player's perspective
-        score = -score_for_opponent
-
-        if score >= beta:
-            return beta
-        if score > alpha:
-            alpha = score
-
-    return alpha
+    if maximizing:
+        for move in captures:
+            if time.time() >= stop_time:
+                raise TimeoutError("Search time exceeded")
+            new_board = do_move(board, move)
+            score = quiescence(new_board, opposite(color), alpha, beta,
+                               stop_time, transposition_table,
+                               q_depth=q_depth - 1, root_color=root_color, info=info)
+            if score >= beta:
+                return beta
+            if score > alpha:
+                alpha = score
+        return alpha
+    else:
+        for move in captures:
+            if time.time() >= stop_time:
+                raise TimeoutError("Search time exceeded")
+            new_board = do_move(board, move)
+            score = quiescence(new_board, opposite(color), alpha, beta,
+                               stop_time, transposition_table,
+                               q_depth=q_depth - 1, root_color=root_color, info=info)
+            if score <= alpha:
+                return alpha
+            if score < beta:
+                beta = score
+        return beta
 
 def generate_moves(board, color, root_color):
     possible_moves = []
